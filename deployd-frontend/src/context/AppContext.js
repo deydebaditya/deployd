@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 
 const AppContext = createContext(null);
 
@@ -7,7 +7,7 @@ export const AppProvider = ({ children }) => {
     const [connections, setConnections] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const checkAuthStatus = async () => {
+    const checkAuthStatus = useCallback(async () => {
         try {
             const response = await fetch('http://localhost:8080/auth/status', { credentials: 'include' });
             if (response.ok) {
@@ -24,11 +24,23 @@ export const AppProvider = ({ children }) => {
             console.error('Error checking auth status:', error);
             setConnections([]);
         }
-    };
+    }, []);
 
     useEffect(() => {
         checkAuthStatus();
-    }, []);
+    }, [checkAuthStatus]);
+
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.data.source === 'oauth-callback-success') {
+                checkAuthStatus();
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }, [checkAuthStatus]);
 
     const addApplication = (appData) => {
         setLoading(true);
@@ -41,8 +53,8 @@ export const AppProvider = ({ children }) => {
 
     const logout = async (providerId) => {
         try {
-            await fetch(`http://localhost:8080/auth/${providerId}/logout`, { method: 'POST', credentials: 'include' });
-            setConnections(prev => prev.filter(conn => conn.provider !== providerId));
+            await fetch(`http://localhost:8080/auth/logout`, { method: 'POST', credentials: 'include' });
+            await checkAuthStatus();
         } catch (error) {
             console.error(`Logout from ${providerId} failed`, error);
         }
