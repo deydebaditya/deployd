@@ -1,45 +1,36 @@
 package main
 
 import (
-	"deployd-backend/pkg/handlers"
-	"deployd-backend/pkg/router"
-	"deployd-backend/pkg/services"
-	"fmt"
 	"log"
 	"net/http"
 
+	"deployd-backend/config"
+	"deployd-backend/pkg/handlers"
+	"deployd-backend/pkg/router"
+	"deployd-backend/pkg/services"
 	"github.com/gorilla/sessions"
 )
 
-const (
-	githubClientID     = "Ov23licNhxP0bWQFmeVq"
-	githubClientSecret = "831768e8d55a2809e18ae076f9387fd205519f90"
-	frontendURL        = "http://localhost:3000"
-)
-
 func main() {
-	store := sessions.NewCookieStore([]byte("secret-key"))
-	store.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7, // 7 days
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+	cfg, err := config.LoadConfig("application.yaml")
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	githubService := services.NewGithubService(githubClientID, githubClientSecret)
+	store := sessions.NewCookieStore([]byte("super-secret-key")) // TODO: Move to config
+	githubService := services.NewGithubService(cfg.Github.ClientID, cfg.Github.ClientSecret)
 
 	h := &handlers.Handler{
 		Store:         store,
 		GithubService: githubService,
-		FrontendURL:   frontendURL,
+		FrontendURL:   cfg.Frontend.URL,
 	}
 
 	r := router.New(h)
-	c := router.CORS(frontendURL)
+	c := router.CORS(cfg.Frontend.URL)
 
 	handler := c.Handler(r)
 
-	fmt.Println("Server listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Printf("Server starting on port %s...", cfg.Server.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Server.Port, handler))
 }
-

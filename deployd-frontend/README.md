@@ -2,6 +2,16 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Configuration
+
+Before running the application, you need to create a `.env` file in the root of the `deployd-frontend` directory. You can do this by copying the sample file:
+
+```bash
+cp .env.sample .env
+```
+
+Next, open `.env` and fill in your GitHub application's client ID.
+
 ## Available Scripts
 
 In the project directory, you can run:

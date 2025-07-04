@@ -8,4 +8,7 @@ require (
 	github.com/rs/cors v1.11.1
 )
 
-require github.com/gorilla/securecookie v1.1.2 // indirect
+require (
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+)
