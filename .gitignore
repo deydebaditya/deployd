@@ -1,0 +1,8 @@
+# OS-specific
+.DS_Store
+*.swo
+*.swp
+
+# IDE-specific
+.idea/
+.vscode/

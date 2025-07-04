@@ -1,0 +1,66 @@
+.health-check-container {
+    padding: 2rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #1f2937;
+}
+
+.dark .health-check-container {
+    background-color: #1f2937;
+    color: #f9fafb;
+}
+
+.health-check-info {
+    text-align: left;
+}
+
+.health-check-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.health-check-status {
+    font-size: 1rem;
+    font-family: monospace;
+}
+
+.status-ok {
+    color: #22c55e; /* green-500 */
+    font-weight: bold;
+}
+
+.status-error {
+    color: #dc2626; /* red-600 */
+    font-weight: bold;
+}
+
+.health-status-bar {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+}
+
+.dark .health-status-bar {
+    background-color: #374151;
+}
+
+.health-strip {
+    width: 20px;
+    height: 40px;
+    border-radius: 2px;
+    background-color: #9ca3af; /* gray-400 for checking state */
+    transition: background-color 0.3s ease;
+}
+
+.health-strip--ok {
+    background-color: #22c55e; /* green-500 */
+}
+
+.health-strip--error {
+    background-color: #dc2626; /* red-600 */
+}
