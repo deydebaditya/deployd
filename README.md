@@ -8,6 +8,7 @@ Deployd is a web-based platform designed to simplify the onboarding and deployme
 - **GitHub Integration:** Automatically creates a new GitHub repository for each onboarded application.
 - **Secure Authentication:** Uses an OAuth2 flow to securely connect to a user's GitHub account.
 - **Session Management:** Maintains user sessions between the frontend and backend.
+- **Application Deletion:** Allows users to delete applications, which also removes the associated Git repository.
 
 ## Architecture
 

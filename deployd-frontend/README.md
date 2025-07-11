@@ -2,6 +2,13 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Features
+
+- **Onboarding Form**: A multi-step form to guide users through the process of creating a new application.
+- **GitHub Integration**: Connects to a user's GitHub account to create new repositories.
+- **Application Dashboard**: Displays a list of all onboarded applications.
+- **Application Deletion**: Allows users to delete applications with a two-step confirmation. This action also deletes the associated GitHub repository.
+
 ## Configuration
 
 Before running the application, you need to create a `.env` file in the root of the `deployd-frontend` directory. You can do this by copying the sample file:

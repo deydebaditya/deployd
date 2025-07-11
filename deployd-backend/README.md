@@ -14,7 +14,7 @@ Before running the application, you need to create a `application.yaml` file in 
 cp application.yaml.sample application.yaml
 ```
 
-Next, open `application.yaml` and fill in your GitHub application's client ID and secret.
+Next, open `application.yaml` and fill in your GitHub application's client ID and secret. Your GitHub OAuth application must have the `repo`, `user:email`, and `delete_repo` scopes.
 
 ### Available Commands
 
@@ -25,3 +25,9 @@ Next, open `application.yaml` and fill in your GitHub application's client ID an
 *   `make compile`: Compiles the application.
 *   `make clean`: Removes the compiled binary.
 *   `make build`: Builds the application.
+
+## API Endpoints
+
+- `POST /api/applications`: Creates a new application.
+- `GET /api/applications`: Retrieves a list of all applications.
+- `DELETE /api/applications/{id}`: Deletes an application and its associated GitHub repository.
