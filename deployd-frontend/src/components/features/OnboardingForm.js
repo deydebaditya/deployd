@@ -10,6 +10,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import MockNotification from '../ui/MockNotification';
+import ProgressBar from '../ui/ProgressBar';
 
 const ReviewItem = ({ label, value }) => (
     <div className="flex justify-between py-3">
@@ -24,12 +25,14 @@ function OnboardingForm({ onFinish, initialData }) {
     const [isLoading, setIsLoading] = useState(false);
     const [notification, setNotification] = useState(null);
     const { addApplication, connections, checkAuthStatus, logout } = useAppContext();
+    const [progress, setProgress] = useState(0);
+    const [timedOut, setTimedOut] = useState(false);
 
     
 
     const handleGitConnect = () => {
         const oauthUrls = {
-            GitHub: `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user`,
+            GitHub: `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,delete_repo`,
             GitLab: `https://gitlab.com/oauth/authorize?client_id=YOUR_GITLAB_CLIENT_ID&response_type=code&scope=api&redirect_uri=http://localhost:8080/auth/gitlab/callback`,
             Bitbucket: `https://bitbucket.org/site/oauth2/authorize?client_id=YOUR_BITBUCKET_CLIENT_ID&response_type=code`
         };
@@ -154,7 +157,12 @@ function OnboardingForm({ onFinish, initialData }) {
             const result = await response.json();
 
             if (response.status === 201) {
-                const appData = { ...formData, gitUrl: result.html_url, createdAt: new Date() };
+                const appData = {
+                    name: formData.appName,
+                    git_repo: result.html_url,
+                    state: 'Active',
+                    language: formData.language
+                };
                 addApplication(appData);
                 setNotification({ type: 'success', message: `${formData.appName} onboarded and repository created!` });
                 setTimeout(() => onFinish(), 1500);
@@ -173,7 +181,7 @@ function OnboardingForm({ onFinish, initialData }) {
             setNotification({ type: 'error', message: 'An unexpected error occurred. Please try again.' });
         }
 
-        setIsLoading(false);
+        // Don't set isLoading to false immediately, wait for progress bar or timeout
     };
 
     const renderTechStack = () => {
@@ -242,6 +250,42 @@ function OnboardingForm({ onFinish, initialData }) {
                 )}
             </div>
         );
+    };
+
+    useEffect(() => {
+        if (!isLoading) {
+            setProgress(0);
+            setTimedOut(false);
+            return;
+        }
+
+        setTimedOut(false);
+        const timer = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(timer);
+                    return 100;
+                }
+                return prev + 10;
+            });
+        }, 1000);
+
+        const timeout = setTimeout(() => {
+            clearInterval(timer);
+            if (isLoading) { // Check if still loading after 10s
+                setTimedOut(true);
+            }
+        }, 10000);
+
+        return () => {
+            clearInterval(timer);
+            clearTimeout(timeout);
+        };
+    }, [isLoading]);
+
+    const handleTrackInBackground = () => {
+        setNotification({ type: 'info', message: 'Onboarding is running in the background. We will notify you upon completion.' });
+        onFinish();
     };
 
     const renderReview = () => {
@@ -326,16 +370,31 @@ function OnboardingForm({ onFinish, initialData }) {
                         })()}
                     </div>
                 </div>}
-                {step === 3 && <div className="space-y-4 animate-fade-in">
+                {step === 3 && !isLoading && <div className="space-y-4 animate-fade-in">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Review your configuration</h3>
                     {renderReview()}
                 </div>}
+                {isLoading && (
+                    <div className="space-y-4 animate-fade-in text-center">
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Onboarding in progress...</h3>
+                        <ProgressBar progress={progress} />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Creating repository and setting up your application.</p>
+                        {timedOut && (
+                            <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg">
+                                <p className="text-sm text-yellow-700 dark:text-yellow-300">Onboarding is taking longer than expected.</p>
+                                <Button onClick={handleTrackInBackground} variant="secondary" className="mt-2">Track in Background</Button>
+                            </div>
+                        )}
+                    </div>
+                )}
                 <div className="mt-8 flex justify-between">
                     {step > 1 ? <Button onClick={handleBack} variant="secondary" type="button">Back</Button> : <div />}
-                    {step < 3 
-                        ? <Button onClick={handleNext} disabled={step === 2 && !connections.some(c => c.provider.toLowerCase() === formData.gitProvider.toLowerCase())} type="button">Next</Button> 
-                        : <Button onClick={handleSubmit} disabled={isLoading} type="button">{isLoading ? 'Onboarding...' : 'Confirm & Onboard'}</Button>
-                    }
+                    {step < 3 && <Button onClick={handleNext} disabled={step === 2 && !connections.some(c => c.provider.toLowerCase() === formData.gitProvider.toLowerCase())} type="button">Next</Button>}
+                    {step === 3 && (
+                        <Button onClick={handleSubmit} disabled={isLoading} type="button">
+                            {isLoading ? 'Onboarding...' : 'Confirm & Onboard'}
+                        </Button>
+                    )}
                 </div>
             </div>
         </Card>

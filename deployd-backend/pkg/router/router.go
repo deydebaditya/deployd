@@ -8,18 +8,20 @@ import (
 )
 
 // New creates a new router and sets up the routes.
-func New(h *handlers.Handler) *mux.Router {
+func NewRouter(appHandler *handlers.ApplicationHandler, authHandler *handlers.AuthHandler) *mux.Router {
 	r := mux.NewRouter()
+
+	// Auth routes
+	r.HandleFunc("/auth/github/callback", authHandler.GithubCallbackHandler).Methods("GET")
+	r.HandleFunc("/auth/status", authHandler.StatusHandler).Methods("GET")
+	r.HandleFunc("/auth/logout", authHandler.LogoutHandler).Methods("POST")
 
 	// API routes
 	api := r.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/github/create-repo", h.CreateRepoHandler).Methods("POST")
-
-	// Auth routes
-	auth := r.PathPrefix("/auth").Subrouter()
-	auth.HandleFunc("/github/callback", h.GithubCallbackHandler).Methods("GET")
-	auth.HandleFunc("/status", h.StatusHandler).Methods("GET")
-	auth.HandleFunc("/logout", h.LogoutHandler).Methods("POST")
+	api.HandleFunc("/github/create-repo", authHandler.CreateRepoHandler).Methods("POST")
+	api.HandleFunc("/applications", appHandler.CreateApplication).Methods("POST")
+	api.HandleFunc("/applications", appHandler.GetApplications).Methods("GET")
+	api.HandleFunc("/applications/{id}", appHandler.DeleteApplication).Methods("DELETE")
 
 	// Health check
 	r.HandleFunc("/ping", handlers.PingHandler).Methods("GET")

@@ -7,6 +7,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import OnboardingForm from './components/features/OnboardingForm';
 import Dashboard from './components/features/Dashboard';
 import ApplicationDetail from './components/features/ApplicationDetail';
+import ReleaseDetail from './components/features/ReleaseDetail';
+import ReleaseForm from './components/features/ReleaseForm';
 import AdminDashboard from './components/features/AdminDashboard';
 import HealthCheck from './components/features/HealthCheck';
 import GitAccounts from './components/features/GitAccounts';
@@ -88,12 +90,17 @@ const Sidebar = ({ currentView, onNavigate }) => {
     );
 };
 
-const PageContent = ({ view, selectedApp, onNavigate, setOnboardingData, onboardingData }) => {
+const PageContent = ({ view, selectedApp, onNavigate, onBack, setOnboardingData, onboardingData, releases, setReleases, history }) => {
     switch (view) {
         case 'onboarding':
             return <OnboardingForm onFinish={() => onNavigate('dashboard')} initialData={onboardingData} />;
         case 'appDetail':
-            return <ApplicationDetail app={selectedApp} onBack={() => onNavigate('dashboard')} />;
+            return <ApplicationDetail app={selectedApp} onBack={onBack} onNavigate={onNavigate} releases={releases[selectedApp.appName] || {}} setReleases={setReleases} />;
+        case 'releaseForm':
+            const { app, env } = selectedApp;
+            return <ReleaseForm app={app} env={env} onBack={onBack} setReleases={setReleases} />;
+        case 'releaseDetail':
+            return <ReleaseDetail release={selectedApp} onBack={onBack} app={history.find(s => s.view === 'appDetail')?.data} />;
         case 'git-accounts':
             return <GitAccounts />;
         case 'admin':
@@ -115,15 +122,24 @@ const PageContent = ({ view, selectedApp, onNavigate, setOnboardingData, onboard
 // --- App Shell ---
 
 function App() {
-    const [currentView, setCurrentView] = useState('dashboard');
-    const [selectedApp, setSelectedApp] = useState(null);
+    const [history, setHistory] = useState([{ view: 'dashboard', data: null }]);
     const [onboardingData, setOnboardingData] = useState(null);
+    const [releases, setReleases] = useState({});
+
+    const currentNavigationState = history[history.length - 1];
+    const currentView = currentNavigationState.view;
+    const selectedApp = currentNavigationState.data;
 
     const handleNavigate = (view, data = null) => {
-        setCurrentView(view);
-        setSelectedApp(data);
+        setHistory(prevHistory => [...prevHistory, { view, data }]);
         if (view !== 'onboarding') {
             setOnboardingData(null);
+        }
+    };
+
+    const handleBack = () => {
+        if (history.length > 1) {
+            setHistory(prevHistory => prevHistory.slice(0, -1));
         }
     };
 
@@ -139,8 +155,12 @@ function App() {
                                 view={currentView}
                                 selectedApp={selectedApp}
                                 onNavigate={handleNavigate}
+                                onBack={handleBack}
                                 onboardingData={onboardingData}
                                 setOnboardingData={setOnboardingData}
+                                releases={releases}
+                                setReleases={setReleases}
+                                history={history}
                             />
                         </main>
                     </div>

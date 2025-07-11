@@ -24,7 +24,7 @@ const GitAccounts = () => {
 
     const handleConnect = (providerId) => {
         const oauthUrls = {
-            github: `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user`,
+            github: `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,delete_repo`,
             gitlab: `https://gitlab.com/oauth/authorize?client_id=YOUR_GITLAB_CLIENT_ID&response_type=code&scope=api&redirect_uri=http://localhost:8080/auth/gitlab/callback`,
             bitbucket: `https://bitbucket.org/site/oauth2/authorize?client_id=YOUR_BITBUCKET_CLIENT_ID&response_type=code`
         };

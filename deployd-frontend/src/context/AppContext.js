@@ -5,7 +5,7 @@ const AppContext = createContext(null);
 export const AppProvider = ({ children }) => {
     const [applications, setApplications] = useState([]);
     const [connections, setConnections] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const checkAuthStatus = useCallback(async () => {
         try {
@@ -26,9 +26,28 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
+    const fetchApplications = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:8080/api/applications', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                setApplications(data || []);
+            } else {
+                console.error('Failed to fetch applications');
+                setApplications([]);
+            }
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+            setApplications([]);
+        }
+        setLoading(false);
+    }, []);
+
     useEffect(() => {
         checkAuthStatus();
-    }, [checkAuthStatus]);
+        fetchApplications();
+    }, [checkAuthStatus, fetchApplications]);
 
     useEffect(() => {
         const handleMessage = (event) => {
@@ -42,13 +61,26 @@ export const AppProvider = ({ children }) => {
         };
     }, [checkAuthStatus]);
 
-    const addApplication = (appData) => {
+    const addApplication = async (appData) => {
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setApplications(prev => [...prev, { ...appData, id: prev.length + 1, status: 'Provisioning' }]);
-            setLoading(false);
-        }, 1500);
+        try {
+            const response = await fetch('http://localhost:8080/api/applications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(appData),
+            });
+            if (response.ok) {
+                await fetchApplications();
+            } else {
+                console.error('Failed to add application');
+            }
+        } catch (error) {
+            console.error('Error adding application:', error);
+        }
+        setLoading(false);
     };
 
     const logout = async (providerId) => {
@@ -62,9 +94,10 @@ export const AppProvider = ({ children }) => {
 
     const value = {
         applications,
+        setApplications,
         addApplication,
-        loading,
         connections,
+        setConnections,
         checkAuthStatus,
         logout,
     };

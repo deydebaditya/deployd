@@ -23,6 +23,7 @@ func NewGithubService(clientID, clientSecret string) *GithubService {
 }
 
 // GetAccessToken exchanges an authorization code for an access token.
+// GetAccessToken exchanges an authorization code for an access token.
 func (s *GithubService) GetAccessToken(code string) (string, error) {
 	tokenReqBody, _ := json.Marshal(map[string]string{
 		"client_id":     s.ClientID,
@@ -101,4 +102,20 @@ func (s *GithubService) CreateRepo(accessToken, repoName string) ([]byte, int, e
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	return body, resp.StatusCode, nil
+}
+
+// DeleteRepo deletes a repository on GitHub.
+func (s *GithubService) DeleteRepo(accessToken, repoFullName string) (int, error) {
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("https://api.github.com/repos/%s", repoFullName), nil)
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", accessToken))
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to send request to delete repo: %w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
 }

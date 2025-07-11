@@ -1,12 +1,29 @@
 package handlers
 
 import (
+	"deployd-backend/pkg/services"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
-func (h *Handler) CreateRepoHandler(w http.ResponseWriter, r *http.Request) {
+type AuthHandler struct {
+	Store         *sessions.CookieStore
+	GithubService *services.GithubService
+	FrontendURL   string
+}
+
+func NewAuthHandler(store *sessions.CookieStore, githubService *services.GithubService, frontendURL string) *AuthHandler {
+	return &AuthHandler{
+		Store:         store,
+		GithubService: githubService,
+		FrontendURL:   frontendURL,
+	}
+}
+
+func (h *AuthHandler) CreateRepoHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.Store.Get(r, "session-name")
 	accessToken, ok := session.Values["access_token"].(string)
 	if !ok || accessToken == "" {
@@ -39,7 +56,7 @@ func (h *Handler) CreateRepoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
-func (h *Handler) GithubCallbackHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) GithubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		http.Error(w, "Error: No authorization code provided by GitHub.", http.StatusBadRequest)
@@ -81,7 +98,7 @@ func (h *Handler) GithubCallbackHandler(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte(script))
 }
 
-func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.Store.Get(r, "session-name")
 	session.Values["access_token"] = nil
 	session.Values["username"] = nil
@@ -91,7 +108,7 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) StatusHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) StatusHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.Store.Get(r, "session-name")
 	username, u_ok := session.Values["username"].(string)
 	provider, p_ok := session.Values["provider"].(string)

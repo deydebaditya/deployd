@@ -19,6 +19,13 @@ type Config struct {
 	Frontend struct {
 		URL string `yaml:"url"`
 	} `yaml:"frontend"`
+	Database struct {
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+		User     string `yaml:"user"`
+		Password string `yaml:"password"`
+		DBName   string `yaml:"dbname"`
+	} `yaml:"database"`
 }
 
 // LoadConfig reads the configuration from the given file path.
